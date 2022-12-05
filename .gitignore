@@ -109,6 +109,7 @@ instructions.txt
 log/
 /static
 /.env.dev
+/configurations/cors.json
 
 # WSGI
 pids/*.pid

@@ -1,0 +1,8 @@
+[
+    {
+      "origin": ["https://bucket-name.com", "https://storage.googleapis.com"],
+      "method": ["GET"],
+      "responseHeader": ["Content-Type"],
+      "maxAgeSeconds": 3600
+    }
+]
