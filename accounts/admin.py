@@ -20,11 +20,76 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
-from accounts.models import User
+from accounts.models import File, User
 
 
 csrf_protect_m = method_decorator(csrf_protect)
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
+
+
+@admin.register(File)
+class FileAdmin(admin.ModelAdmin):
+    MAX_ADMIN_FIELD_LENGTH: int = 16
+
+    readonly_fields = (
+        'sha256',
+        'original_name',
+        'original_extension',
+        'content_type',
+        'size',
+        'is_encrypted',
+        'ip',
+        'exif',
+    )
+    list_display = (
+        'file_hash',
+        'owner',
+        'file_name',
+    )
+    fieldsets = (
+        (
+            None, {
+                'fields': (
+                    'owner',
+                    'is_private',
+                    'file',
+                    'sha256',
+                )
+            }
+        ),
+        (
+            _('Original info'),
+            {
+                'fields': (
+                    'original_name',
+                    'original_extension',
+                    'content_type',
+                    'size',
+                    'is_encrypted',
+                    'ip',
+                    'exif',
+                )
+            }
+        ),
+    )
+    search_fields = (
+        'owner__username',
+        'owner__first_name',
+        'owner__last_name',
+        'sha256',
+        'original_full_name',
+        'ip',
+    )
+
+    def file_hash(self, obj: File) -> str:
+        return obj.sha256[:self.MAX_ADMIN_FIELD_LENGTH]
+
+    def file_name(self, obj: File) -> str:
+        original_name: str = obj.original_name or ''
+        original_extension: str = obj.original_extension or ''
+        max_field_name: int = int(self.MAX_ADMIN_FIELD_LENGTH / 2)
+
+        return '%s%s' % (original_name[:max_field_name], original_extension[:max_field_name])
 
 
 @admin.register(User)
