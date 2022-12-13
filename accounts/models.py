@@ -17,6 +17,7 @@ from accounts.utils import file_upload_path, get_uuid_hex
 
 
 MAGIC_MIME = magic.Magic(mime=True)
+DEFAULT_MAX_FILE_SIZE: int = 100 * 2**20
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -71,6 +72,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     public_key = models.TextField(
         _('Public key'),
         max_length=2056,
+        null=True,
+        blank=True
+    )
+    max_file_size = models.IntegerField(
+        _('Maximum file size'),
+        default=DEFAULT_MAX_FILE_SIZE,
         null=True,
         blank=True
     )

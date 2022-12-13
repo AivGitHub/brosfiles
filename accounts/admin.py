@@ -41,6 +41,7 @@ class UserAdmin(admin.ModelAdmin):
                     'is_active',
                     'is_staff',
                     'is_superuser',
+                    'max_file_size',
                     'public_key',
                     'groups',
                     'user_permissions',
