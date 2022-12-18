@@ -1,0 +1,15 @@
+{% extends "base/base_site.html" %}
+
+{% load extras i18n static %}
+
+{% block extrascript %}
+  <script src="{% static 'accounts/js/account.js' %}?v={% get_setting 'project_build_hash' %}"></script>
+{% endblock %}
+
+{% block page_title %}
+  {{ request.user }}
+{% endblock %}
+
+{% block container %}
+  <h1 class="mt-5">{{ request.user }}</h1>
+{% endblock %}
