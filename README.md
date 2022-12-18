@@ -13,6 +13,8 @@ This project is focused on deploying on Google cloud.
 
 ## Usage
 
+Bootstrap libraries won't be added to the project. Run `bash bin/download_bootstrap` to download bootstrap.
+
 ### Development
 
 1. Create .env (`cp .env.template .env`) file with related environment variables
@@ -24,8 +26,10 @@ This project is focused on deploying on Google cloud.
 ### Google cloud
 
 1. See [this](https://cloud.google.com/python/django/appengine)
-2. To deploy: `bash bin/deploy` (gcloud is needed).
-3. To resolve the CORS issues:
+2. To deploy: `bash bin/deploy` (gcloud and wget are needed).
+3. Bootstrap should be placed to `base/static/bootstrap/` (deploy command includes this step),
+libraries can't be downloaded from Google engine.
+4. To resolve the CORS issues:
     - cp configurations/cors.json.template configurations/cors.json with needed values
     - gcloud storage buckets update gs://bucket-name --cors-file=configurations/cors.json
 

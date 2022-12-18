@@ -110,6 +110,7 @@ log/
 /static
 /.env.dev
 /configurations/cors.json
+/base/static/bootstrap
 
 # WSGI
 pids/*.pid

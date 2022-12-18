@@ -1,0 +1,104 @@
+{% load i18n static %}
+{% load extras %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}">
+  <head>
+    <!-- CEO -->
+    <meta
+      name="description"
+      content="{% get_setting 'project_description' %}"
+    />
+    <meta property="og:title" content="{% get_setting 'project_title' %}" />
+    <meta
+      property="og:description"
+      content="{% get_setting 'project_description' %}"
+    />
+    <meta property="og:url" content="{% get_setting 'project_url' %}" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="keywords" content="{% get_setting 'project_keywords' %}" />
+    {% block blockrobots %}
+      <meta name="robots" content="{% get_setting 'project_robots' %}" />
+    {% endblock %}
+    <meta name="description" content="{% get_setting 'project_description' %}" />
+    <!-- /CEO -->
+    <meta charset="utf-8" />
+    <title>
+      {% block page_title %}
+        {% if page_title %}
+          {{ page_title }}
+        {% else %}
+          {% get_setting "project_title" %}
+        {% endif %}
+      {% endblock %}
+    </title>
+    {% block scripts %}
+      <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}?v={% get_setting 'project_build_hash' %}">
+      </script>
+      <script
+        src="{% static 'bootstrap/js/bootstrap.min.js' %}?v={% get_setting 'project_build_hash' %}"
+        crossorigin="anonymous"></script>
+      <script src="{% static 'base/js/base.js' %}?v={% get_setting 'project_build_hash' %}">
+      </script>
+    {% endblock %}
+    {% block styles %}
+      <link
+        rel="stylesheet"
+        href="{% static 'bootstrap/css/bootstrap.min.css' %}?v={% get_setting 'project_build_hash' %}"
+        crossorigin="anonymous"
+      >
+      <link href="{% static 'base/css/base.css' %}?v={% get_setting 'project_build_hash' %}" rel="stylesheet">
+    {% endblock %}
+    {% block extrascript %}{% endblock %}
+    {% block extrastyle %}{% endblock %}
+    {% block extrahead %}{% endblock %}
+  </head>
+  <body>
+    <header>
+      {% block header %}
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+          <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+              {% get_setting 'project_title' %}
+            </a>
+            <button
+              class="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbar-collapse"
+              aria-controls="navbar-collapse"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-collapse">
+              <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="/">
+                    {% translate "Home" %}
+                  </a>
+                </li>
+                {% block extra_navbar_nav %}{% endblock %}
+              </ul>
+            </div>
+          </div>
+        </nav>
+      {% endblock %}
+    </header>
+    <main role="main" id="main" class="container">
+      {% block container %}
+      {% endblock %}
+    </main>
+    <footer class="footer">
+      {% block footer %}
+        <div class="container text-center">
+          <span class="text-muted">
+            &copy; {% get_setting "project_title" %}
+          </span>
+        </div>
+      {% endblock %}
+    </footer>
+  </body>
+</html>

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import io
 from pathlib import Path
+import secrets
 
 import environ
 from google.cloud import secretmanager
@@ -210,3 +211,15 @@ else:
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# [CEO]
+PROJECT_BUILD_HASH = secrets.token_hex(nbytes=16)
+PROJECT_TITLE = ''.join(_i.capitalize() for _i in PROJECT_NAME.split())
+PROJECT_DESCRIPTION = '%s is a free file storage' % PROJECT_TITLE
+PROJECT_URL = ''
+PROJECT_KEYWORDS = 'free, files, storage'
+if DEBUG:
+    PROJECT_ROBOTS = 'none, noarchive'
+else:
+    PROJECT_ROBOTS = 'index'
+# [/CEO]
