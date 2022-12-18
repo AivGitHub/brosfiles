@@ -24,7 +24,8 @@ This project is focused on deploying on Google cloud.
 ### Google cloud
 
 1. See [this](https://cloud.google.com/python/django/appengine)
-2. To resolve the CORS issues:
+2. To deploy: `bash bin/deploy` (gcloud is needed).
+3. To resolve the CORS issues:
     - cp configurations/cors.json.template configurations/cors.json with needed values
     - gcloud storage buckets update gs://bucket-name --cors-file=configurations/cors.json
 
