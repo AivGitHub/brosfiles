@@ -32,6 +32,9 @@ libraries can't be downloaded from Google engine.
 4. To resolve the CORS issues:
     - cp configurations/cors.json.template configurations/cors.json with needed values
     - gcloud storage buckets update gs://bucket-name --cors-file=configurations/cors.json
+5. Google Cloud Storage:
+    - To create key see [this](https://cloud.google.com/iam/docs/creating-managing-service-account-keys#iam-service-account-keys-create-console)
+    - Set path of this key to GOOGLE_APPLICATION_CREDENTIALS see [.env.template](.env.template)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

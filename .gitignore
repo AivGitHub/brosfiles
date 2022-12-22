@@ -111,6 +111,7 @@ log/
 /.env.dev
 /configurations/cors.json
 /base/static/bootstrap
+configurations/google_cloud_credentials.json
 
 # WSGI
 pids/*.pid
