@@ -302,3 +302,26 @@ class File(models.Model):
             mime_type = 'application/unknown'
 
         return mime_type
+
+    def get_max_size(self) -> int:
+        """Returns maximum allowed uploaded file size in bytes.
+
+        Note:
+            Allowed file size depends on user, but file can be uploaded by AnonymousUser,
+            in that case ``File.owner`` = None and ``accounts.models.DEFAULT_MAX_FILE_SIZE`` will be returned.
+
+        Returns:
+            int: Maximum allowed file size in bytes.
+        """
+        if self.owner is not None:
+            return self.owner.max_file_size
+
+        return DEFAULT_MAX_FILE_SIZE
+
+    def allow_upload(self) -> bool:
+        """Determines if the file can be uploaded to the server.
+
+        Returns:
+            bool: True if file is allowed to upload, False otherwise.
+        """
+        return self.get_max_size() > self.file.size
