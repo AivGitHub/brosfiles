@@ -1,6 +1,7 @@
 from hashlib import sha256
 from pathlib import Path
 import secrets
+from typing import Optional
 
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -12,6 +13,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 import magic
 
+from accounts.dataclasses import SignedURLReturnObject
+from accounts.enums import SignedURLMethod
 from accounts.managers import UserManager
 from accounts.utils import file_upload_path, get_uuid_hex
 
@@ -226,6 +229,14 @@ class File(models.Model):
         unique=True
     )
 
+    DEFAULT_SIGNED_URL_EXPIRATION = 15 * 60
+    MIN_SIGNED_URL_EXPIRATION = 0
+    MAX_SIGNED_URL_EXPIRATION = 7 * 24 * 60 * 60
+    SUPPORTED_METHODS = (
+        SignedURLMethod.PUT,
+        SignedURLMethod.GET,
+    )
+
     def __str__(self):
         return self.sha256[:8]
 
@@ -325,3 +336,54 @@ class File(models.Model):
             bool: True if file is allowed to upload, False otherwise.
         """
         return self.get_max_size() > self.file.size
+
+    def get_signed_url_expiration(self, expiration: Optional[int]) -> int:
+        """Returns expiration time of the signed URL.
+
+        Args:
+            expiration (int, optional): Expiration time in seconds or None.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+
+        Returns:
+            int: Expiration time of the signed URL in seconds.
+
+        Raises:
+            ValueError: If wrong expiration time is specified.
+        """
+        if expiration is None:
+            return self.DEFAULT_SIGNED_URL_EXPIRATION
+
+        if self.MIN_SIGNED_URL_EXPIRATION > expiration > self.MAX_SIGNED_URL_EXPIRATION:
+            raise ValueError(
+                'Wrong expiration time; min=%s, max=%s' % (
+                    self.MIN_SIGNED_URL_EXPIRATION,
+                    self.MAX_SIGNED_URL_EXPIRATION
+                )
+            )
+
+        return expiration
+
+    def generate_upload_signed_url(
+            self,
+            expiration: Optional[int] = None,
+            headers: Optional[dict] = None
+    ) -> SignedURLReturnObject:
+        """Generates upload signed URL depending on storage.
+
+        Note:
+            If ``expiration`` is not specified expiration time will be ``File.DEFAULT_SIGNED_URL_EXPIRATION``.
+
+        Args:
+            expiration (int, optional): Expiration time in seconds or None.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+            headers (dict, optional): Extra headers.
+
+        Returns:
+            accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
+
+        Raises:
+            NotImplementedError: If storage is not supported.
+        """
+        raise NotImplementedError()
