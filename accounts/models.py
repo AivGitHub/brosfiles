@@ -1,20 +1,25 @@
+import datetime
 from hashlib import sha256
 from pathlib import Path
 import secrets
 from typing import Optional
 
+from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
     PermissionsMixin,
 )
+from django.core.files.storage import default_storage as storage
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from google.cloud.storage.blob import Blob
 import magic
 
 from accounts.dataclasses import SignedURLReturnObject
 from accounts.enums import SignedURLMethod
+from accounts.exceptions import NotSupportedSignURLMethod
 from accounts.managers import UserManager
 from accounts.utils import file_upload_path, get_uuid_hex
 
@@ -386,4 +391,114 @@ class File(models.Model):
         Raises:
             NotImplementedError: If storage is not supported.
         """
+        expiration: int = self.get_signed_url_expiration(expiration)
+
+        if settings.GOOGLE_CLOUD_PROJECT:
+            return self.generate_google_upload_signed_url(expiration=expiration, headers=headers)
+
         raise NotImplementedError()
+
+    def _generate_google_signed_url(
+            self,
+            method: SignedURLMethod,
+            expiration: Optional[int] = None,
+            headers: Optional[dict] = None,
+            content_type: Optional[str] = None
+    ) -> SignedURLReturnObject:
+        """Generates Google signed URL.
+
+        Note:
+            Version v4 of Google API updates headers.
+                https://github.com/googleapis/python-storage/blob/main/google/cloud/storage/_signing.py#L418
+
+        Args:
+            method (accounts.enums.SignedURLMethod): Should be in ``File.SUPPORTED_METHODS``.
+            expiration (int, optional): Expiration time in seconds.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+            headers (dict, optional): Additional headers.
+                For example, specifying `X-Goog-Content-Length-Range: min_size, max_size` header implies
+                that the uploaded file size must be greater than `min_size` and less than `max_size`.
+            content_type (str, optional): Content type of the uploaded file.
+
+        Returns:
+            accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
+
+        Raises:
+            accounts.exceptions.NotSupportedSignURLMethod: If specified method is not supported.
+        """
+        if method not in self.SUPPORTED_METHODS:
+            raise NotSupportedSignURLMethod()
+
+        blob: Blob = storage.bucket.blob(self.file.name)
+
+        expiration: int = self.get_signed_url_expiration(expiration)
+        signed_url_kwargs: dict = dict(
+            version='v4',
+            method=method.value
+        )
+
+        if expiration is not None:
+            signed_url_kwargs.update(
+                dict(
+                    expiration=datetime.timedelta(seconds=expiration)
+                )
+            )
+
+        if content_type is not None:
+            signed_url_kwargs.update(
+                dict(
+                    content_type=content_type
+                )
+            )
+
+        if headers is not None:
+            signed_url_kwargs.update(
+                dict(
+                    headers=headers
+                )
+            )
+
+        url = blob.generate_signed_url(**signed_url_kwargs)
+
+        return SignedURLReturnObject(
+            url=url,
+            headers=headers,
+            method=method.value
+        )
+
+    def generate_google_upload_signed_url(
+            self,
+            expiration: Optional[int] = None,
+            headers: Optional[dict] = None
+    ) -> SignedURLReturnObject:
+        """Generates Google upload signed URL.
+
+        Args:
+            expiration (int, optional): Expiration time in seconds.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+            headers (dict, optional): Extra headers.
+
+        Returns:
+            accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
+        """
+        max_size: int = self.get_max_size()
+        expiration: int = self.get_signed_url_expiration(expiration)
+
+        base_headers: dict = {
+            'X-Goog-Content-Length-Range': '0,%s' % max_size,
+        }
+
+        if headers is not None:
+            allow_origin = headers.get('Access-Control-Allow-Origin')
+
+            if allow_origin in settings.ALLOWED_HOSTS:
+                base_headers.update(headers)
+
+        return self._generate_google_signed_url(
+            SignedURLMethod.PUT,
+            expiration=expiration,
+            headers=base_headers,
+            content_type='application/octet-stream'
+        )
