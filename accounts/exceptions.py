@@ -4,3 +4,7 @@ class UUID4HEXNotGenerated(Exception):
 
 class NotSupportedSignURLMethod(Exception):
     pass
+
+
+class NotAllowed(Exception):
+    pass
