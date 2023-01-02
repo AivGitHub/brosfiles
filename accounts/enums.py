@@ -15,3 +15,15 @@ class TransferType(Enum):
     CHUNKED = 'CHUNKED'
     SIGNED_URL = 'SIGNED_URL'
     DEFAULT = 'DEFAULT'
+
+
+class UploadAction(Enum):
+    """Upload action"""
+    START = 'START'
+    FINISH = 'FINISH'
+
+
+class UploadStatus(Enum):
+    """Upload status"""
+    PENDING = 'PENDING'
+    DONE = 'DONE'

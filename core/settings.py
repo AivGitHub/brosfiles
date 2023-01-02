@@ -54,6 +54,7 @@ if TRAMPOLINE_CI and not GOOGLE_CLOUD_PROJECT:
         'GS_BUCKET_NAME=None\n'
         'BF_ALLOWED_HOSTS=*\n'
         'BF_DEBUG=True\n'
+        'BF_JWT_AUTH_KEY=some-jwt-secret-value\n'
     )
 
     ENV.read_env(io.StringIO(placeholder))
@@ -86,6 +87,7 @@ if GOOGLE_CLOUD_PROJECT and not TRAMPOLINE_CI:
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = ENV.get_value('BF_SECRET_KEY')
+BF_JWT_AUTH_KEY = ENV.get_value('BF_JWT_AUTH_KEY')
 
 
 # By default, always run in production mode
