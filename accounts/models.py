@@ -12,6 +12,7 @@ from django.contrib.auth.models import (
 from django.core.files.storage import default_storage as storage
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models.fields.files import FieldFile
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from google.cloud.storage.blob import Blob
@@ -502,3 +503,15 @@ class File(models.Model):
             headers=base_headers,
             content_type='application/octet-stream'
         )
+
+
+def generate_fake_file(original_name):
+    file = File()
+
+    file_field = models.FileField(upload_to=file_upload_path(File, original_name), name=original_name)
+    field_file = FieldFile(field=file_field, name=file_field.upload_to, instance=models.FileField)
+
+    file.file = field_file
+    file.save(fake=True, original_full_name=original_name)
+
+    return file
