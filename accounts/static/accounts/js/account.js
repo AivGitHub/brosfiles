@@ -64,7 +64,7 @@ class File {
       headers: headers,
     })
     .done(function (data) {
-      alert(data.status);
+      window.location.href = data.redirect_url;
     })
     .fail(function (jqXHR, textStatus, errorThrown) {
       console.error(textStatus);

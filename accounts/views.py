@@ -62,7 +62,14 @@ class Account(View):
         if file_upload_form.is_valid():
             file_upload_form.save()
 
-            return redirect(reverse('accounts:index'))
+            return redirect(
+                reverse(
+                    'accounts:file',
+                    kwargs={
+                        'url_path': file_upload_form.instance.url_path
+                    }
+                )
+            )
 
         return render(
             request=request,
@@ -118,7 +125,7 @@ class Account(View):
             raise NotAllowed()
 
         return {
-            'status': UploadStatus.DONE.value
+            'redirect_url': reverse('accounts:file', kwargs={'url_path': file.url_path})
         }
 
     # noinspection PyMethodMayBeStatic
