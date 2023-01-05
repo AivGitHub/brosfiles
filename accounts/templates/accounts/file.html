@@ -1,0 +1,38 @@
+{% extends "base/base_site.html" %}
+
+{% load extras i18n static %}
+
+{% block page_title %}
+  {{ request.user }}
+{% endblock %}
+
+{% block container %}
+  <form id="file-download-form" class="mt-5" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" value="{{ file.url_path }}" name="url_path"/>
+    <div class="mb-3">
+      <h1>{% translate "File" %}</h1>
+      <div>
+        {% get_field_verbose_name file "original_full_name" %}: {{ file.original_full_name }}
+      </div>
+      <div>
+        {% get_field_verbose_name file "size" %}: {{ file.get_h_size }}
+      </div>
+      <div>
+        {% get_field_verbose_name file "content_type" %}: {{ file.content_type }}
+      </div>
+    </div>
+    {% if not upload_url %}
+      <button id="file-download-button" class="btn btn-warning" type="submit">
+        {% translate "Generate download link" %}
+      </button>
+    {% else %}
+      <a href="{{ upload_url }}" class="btn btn-success" role="button" target="_blank">
+        {% translate "Download file" %}
+      </a>
+      <div>
+       {% translate "Download link will expire in" %} {{ expiration }} {% translate "hours" %}
+      </div>
+    {% endif %}
+  </form>
+{% endblock %}

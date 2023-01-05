@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Union
 
 from django.http import HttpResponseForbidden, JsonResponse
@@ -7,6 +8,7 @@ from django.urls import reverse
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views import View
 
+from accounts.dataclasses import SignedURLReturnObject
 from accounts.enums import TransferType, UploadAction, UploadStatus
 from accounts.exceptions import NotAllowed
 from accounts.forms import FileUploadForm
@@ -166,3 +168,53 @@ class Account(View):
             raise raised_exception()
 
         return header_value
+
+
+class FileView(View):
+    template_name = 'accounts/file.html'
+    ONE_HOUR: int = 60 * 60
+
+    def get(self, request, *args, **kwargs):
+        url_path = kwargs.get('url_path')
+
+        if url_path is None:
+            return redirect(reverse('accounts:index'))
+
+        try:
+            file = File.objects.get(url_path=url_path)
+        except File.DoesNotExist:
+            return redirect(reverse('accounts:index'))
+
+        return render(
+            request=request,
+            template_name=self.template_name,
+            context={
+                'file': file,
+                'upload_url': None,
+                'expiration': None,
+            }
+        )
+
+    def post(self, request, *args, **kwargs):
+        url_path = kwargs.get('url_path')
+
+        if url_path is None:
+            return redirect(reverse('accounts:index'))
+
+        try:
+            file = File.objects.get(url_path=url_path)
+        except File.DoesNotExist:
+            return redirect(reverse('accounts:index'))
+
+        expiration = self.ONE_HOUR
+        signed_url_object: SignedURLReturnObject = file.generate_download_signed_url(expiration=expiration)
+
+        return render(
+            request=request,
+            template_name=self.template_name,
+            context={
+                'file': file,
+                'upload_url': signed_url_object.url,
+                'expiration': timedelta(seconds=expiration),
+            }
+        )
