@@ -13,6 +13,7 @@ from django.core.files.storage import default_storage as storage
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models.fields.files import FieldFile
+from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from google.cloud.storage.blob import Blob
@@ -580,6 +581,14 @@ class File(models.Model):
             headers=headers,
             query_parameters=base_query_parameters
         )
+
+    def get_h_size(self):
+        """Returns humanreadable size of the file.
+
+        Returns:
+            str: Human readable size.
+        """
+        return filesizeformat(self.size)
 
 
 def generate_fake_file(original_name):
