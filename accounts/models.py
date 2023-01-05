@@ -399,12 +399,42 @@ class File(models.Model):
 
         raise NotImplementedError()
 
+    def generate_download_signed_url(
+            self,
+            expiration: Optional[int] = None,
+            headers: Optional[dict] = None
+    ) -> SignedURLReturnObject:
+        """Generates download signed URL depending on storage.
+
+        Note:
+            If ``expiration`` is not specified expiration time will be ``File.DEFAULT_SIGNED_URL_EXPIRATION``.
+
+        Args:
+            expiration (int, optional): Expiration time in seconds or None.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+            headers (dict, optional): Extra headers.
+
+        Returns:
+            accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
+
+        Raises:
+            NotImplementedError: If storage is not supported.
+        """
+        expiration: int = self.get_signed_url_expiration(expiration)
+
+        if settings.GOOGLE_CLOUD_PROJECT:
+            return self.generate_google_download_signed_url(expiration=expiration, headers=headers)
+
+        raise NotImplementedError()
+
     def _generate_google_signed_url(
             self,
             method: SignedURLMethod,
             expiration: Optional[int] = None,
             headers: Optional[dict] = None,
-            content_type: Optional[str] = None
+            content_type: Optional[str] = None,
+            query_parameters: Optional[dict] = None
     ) -> SignedURLReturnObject:
         """Generates Google signed URL.
 
@@ -421,6 +451,8 @@ class File(models.Model):
                 For example, specifying `X-Goog-Content-Length-Range: min_size, max_size` header implies
                 that the uploaded file size must be greater than `min_size` and less than `max_size`.
             content_type (str, optional): Content type of the uploaded file.
+            query_parameters (dict, optional): Extra query parameters.
+                Query parameters are not signed and should be used with caution.
 
         Returns:
             accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
@@ -457,6 +489,13 @@ class File(models.Model):
             signed_url_kwargs.update(
                 dict(
                     headers=headers
+                )
+            )
+
+        if query_parameters is not None:
+            signed_url_kwargs.update(
+                dict(
+                    query_parameters=query_parameters
                 )
             )
 
@@ -502,6 +541,44 @@ class File(models.Model):
             expiration=expiration,
             headers=base_headers,
             content_type='application/octet-stream'
+        )
+
+    def generate_google_download_signed_url(
+        self,
+        expiration: Optional[int] = None,
+        headers: Optional[dict] = None,
+        query_parameters: Optional[dict] = None
+    ) -> SignedURLReturnObject:
+        """Generates Google download signed URL.
+
+        Args:
+            expiration (int, optional): Expiration time in seconds.
+                If specified must be greater than 0 and less than 60*60*24*7 (7 days).
+                If not specified, then ``File.DEFAULT_SIGNED_URL_EXPIRATION`` will be used.
+            headers (dict, optional): Extra headers.
+            query_parameters (dict, optional): Additional query parameters.
+                Query parameters are not signed and should be used with caution.
+
+        Returns:
+            accounts.dataclasses.SignedURLReturnObject: Values that allows clients to make upload request.
+        """
+        expiration: int = self.get_signed_url_expiration(expiration)
+
+        if headers is None:
+            headers = {}
+
+        base_query_parameters: dict = {
+            'response-content-disposition': 'attachment;filename="%s"' % self.original_full_name,
+        }
+
+        if query_parameters is not None:
+            base_query_parameters.update(query_parameters)
+
+        return self._generate_google_signed_url(
+            SignedURLMethod.GET,
+            expiration=expiration,
+            headers=headers,
+            query_parameters=base_query_parameters
         )
 
 
