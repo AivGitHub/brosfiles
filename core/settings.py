@@ -189,6 +189,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+########
+# CSRF #
+########
+
+
+CSRF_FAILURE_VIEW = "base.views.csrf_failure"
+
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 

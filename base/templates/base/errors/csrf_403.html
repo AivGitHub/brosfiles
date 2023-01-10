@@ -1,0 +1,17 @@
+{% extends "base/base_site.html" %}
+
+{% load i18n %}
+
+{% block page_title %}
+  {% translate "Forbidden" %}
+{% endblock %}
+
+{% block container %}
+  <h1 class="mt-5">{% translate "Something went wrong" %}</h1>
+  <p>
+    {% translate "Back to" %}
+    <a href="{% url 'index' %}">
+      {% translate "known paths" %}.
+    </a>
+  </p>
+{% endblock %}
