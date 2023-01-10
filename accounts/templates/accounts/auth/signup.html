@@ -1,0 +1,35 @@
+{% extends "base/base_site.html" %}
+
+{% load extras i18n static %}
+
+{% block extrascript %}
+  <script src="{% static 'accounts/js/account.js' %}?v={% get_setting 'project_build_hash' %}"></script>
+{% endblock %}
+
+{% block page_title %}
+  {{ request.user }}
+{% endblock %}
+
+{% block container %}
+  <h1 class="mt-5">{% translate "Sign up" %}</h1>
+  <form id="signup-form" class="mt-5" method="POST">
+    {% csrf_token %}
+    {% for field in signup_form %}
+      <div class="form-group">
+        <label for="{{ field.auto_id }}" class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+          <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+        {% if field.errors %}
+          <ul class="list-group">
+            {% for error in field.errors %}
+              <li class="list-group-item list-group-item-danger">{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    {% endfor %}
+    <button id="file-upload-button" class="btn btn-secondary" type="submit">{% translate "Sign up" %}</button>
+  </form>
+{% endblock %}

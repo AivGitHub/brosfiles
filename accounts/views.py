@@ -11,7 +11,7 @@ from django.views import View
 from accounts.dataclasses import SignedURLReturnObject
 from accounts.enums import TransferType, UploadAction, UploadStatus
 from accounts.exceptions import NotAllowed
-from accounts.forms import FileUploadForm
+from accounts.forms import FileUploadForm, SignUpForm
 from accounts.models import File, generate_fake_file
 from base.exceptions import FatalSignatureError, SignatureExpiredError
 from base.utils import decode_jwt_signature, generate_jwt_signature
@@ -223,5 +223,42 @@ class FileView(View):
                 'file': file,
                 'upload_url': signed_url_object.url,
                 'expiration': timedelta(seconds=expiration),
+            }
+        )
+
+
+class SignUpView(View):
+    template = 'accounts/auth/signup.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(reverse('accounts:index'))
+
+        return super(SignUpView, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        signup_form = SignUpForm()
+
+        return render(
+            request=request,
+            template_name=self.template,
+            context={
+                'signup_form': signup_form
+            }
+        )
+
+    def post(self, request, *args, **kwargs):
+        signup_form: SignUpForm = SignUpForm(
+            data=request.POST
+        )
+
+        if signup_form.is_valid():
+            signup_form.save()
+
+        return render(
+            request=request,
+            template_name=self.template,
+            context={
+                'signup_form': signup_form
             }
         )
