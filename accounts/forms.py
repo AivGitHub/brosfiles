@@ -1,7 +1,7 @@
 from typing import Union
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from django.template.defaultfilters import filesizeformat
@@ -170,3 +170,26 @@ class SignUpForm(UserCreationForm):
             user.save()
 
         return user
+
+
+class SignInForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'autofocus': True,
+                'class': 'form-control',
+                'placeholder': _('Username'),
+            }
+        )
+    )
+    password = forms.CharField(
+        label=_('Password'),
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                'autocomplete': 'current-password',
+                'class': 'form-control',
+                'placeholder': _('Password'),
+            }
+        ),
+    )

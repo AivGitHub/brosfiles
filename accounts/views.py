@@ -1,17 +1,21 @@
 from datetime import timedelta
 from typing import Union
 
+from django.contrib import messages
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponseForbidden, JsonResponse
 from django.http.request import HttpHeaders
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.datastructures import MultiValueDictKeyError
+from django.utils.translation import gettext as _
 from django.views import View
 
 from accounts.dataclasses import SignedURLReturnObject
 from accounts.enums import TransferType, UploadAction, UploadStatus
 from accounts.exceptions import NotAllowed
-from accounts.forms import FileUploadForm, SignUpForm
+from accounts.forms import SignInForm, FileUploadForm, SignUpForm
 from accounts.models import File, generate_fake_file
 from base.exceptions import FatalSignatureError, SignatureExpiredError
 from base.utils import decode_jwt_signature, generate_jwt_signature
@@ -260,5 +264,46 @@ class SignUpView(View):
             template_name=self.template,
             context={
                 'signup_form': signup_form
+            }
+        )
+
+
+class SigInView(LoginView):
+    template = 'accounts/auth/signin.html'
+    redirect_authenticated_user = True
+
+    def get(self, request, *args, **kwargs):
+        signin_form = SignInForm()
+
+        return render(
+            request=request,
+            template_name=self.template,
+            context={
+                'signin_form': signin_form
+            }
+        )
+
+    def post(self, request, *args, **kwargs):
+        signin_form: SignInForm = SignInForm(
+            data=request.POST
+        )
+
+        if signin_form.is_valid():
+            username = signin_form.cleaned_data.get('username')
+            password = signin_form.cleaned_data.get('password')
+
+            user = authenticate(username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                return redirect(reverse('accounts:index'))
+
+        messages.error(request, _('Invalid username or password.'))
+
+        return render(
+            request=request,
+            template_name=self.template,
+            context={
+                'signin_form': signin_form
             }
         )

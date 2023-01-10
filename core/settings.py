@@ -107,6 +107,12 @@ if GOOGLE_CLOUD_PROJECT:
 ##################
 AUTH_USER_MODEL = 'accounts.User'
 
+LOGIN_URL = "/accounts/sigin/"
+
+LOGIN_REDIRECT_URL = "/"
+
+LOGOUT_REDIRECT_URL = None
+
 
 # Application definition
 INSTALLED_APPS = [
